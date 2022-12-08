@@ -1,5 +1,6 @@
 require_relative 'colorize.rb'
 
+require 'benchmark'
 require 'prime'
 require 'set'
 require 'matrix'
@@ -21,8 +22,16 @@ end
 class String
   include Enumerable
 
+  def lower?
+    self.upcase != self && self.downcase == self
+  end
+
+  def upper?
+    self.downcase != self && self.upcase == self
+  end
+
   def each(&block)
-    self.chars.each do |ch|
+    self.each_char do |ch|
       block.call(ch)
     end
   end
@@ -43,6 +52,11 @@ class AdventOfCode
     $0.sub('solution.rb', 'example.txt')
   end
 
+  def self.solve_part(id, input_str)
+    input = self.take_input(input_str)
+    @@parts[id][input]
+  end
+
   def self.run
     if File.exists?(example_file)
       example_input = take_input(File.read(example_file))
@@ -56,14 +70,17 @@ class AdventOfCode
 
     @@parts.each do |part_name, solve|
       puts "#{self.name} part #{part_name}:".magenta
-      if example_input.empty?
-        answer = solve[input]
-        puts "#{answer}".white
-      else
-        example_ans = "(example: #{solve[example_input]})"
-        answer = solve[input]
-        puts "#{answer}  #{example_ans.bright_black}".white
-      end
+      time_taken = Benchmark.realtime {
+        if example_input.empty?
+          answer = solve[input]
+          print "#{answer}".white
+        else
+          example_ans = "(example: #{solve[example_input]})"
+          answer = solve[input]
+          print "#{answer}  #{example_ans.bright_black}".white
+        end
+      }
+      puts " – took #{(1000 * time_taken).round(3)} milliseconds".bright_black
     end
   end
 end
